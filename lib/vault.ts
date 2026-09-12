@@ -1,0 +1,6 @@
+type Device={key:CryptoKey;publicKey:string;token?:string;roomId?:string;role?:string;invite?:string;contactInvite?:string;peerKey?:string};
+function open():Promise<IDBDatabase>{return new Promise((resolve,reject)=>{const r=indexedDB.open('nightwalk-device-keys',1);r.onupgradeneeded=()=>r.result.createObjectStore('keys');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(new Error('This browser cannot save your device key.'));});}
+export async function getDevice(id:string):Promise<Device|undefined>{const db=await open();return new Promise((resolve,reject)=>{const tx=db.transaction('keys','readonly'),r=tx.objectStore('keys').get(id);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);tx.oncomplete=()=>db.close();});}
+export async function putDevice(id:string,value:Device){const db=await open();return new Promise<void>((resolve,reject)=>{const tx=db.transaction('keys','readwrite');tx.objectStore('keys').put(value,id);tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>reject(new Error('Your device key could not be saved.'));});}
+export async function removeDevice(id:string){const db=await open();return new Promise<void>((resolve,reject)=>{const tx=db.transaction('keys','readwrite');tx.objectStore('keys').delete(id);tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>reject(tx.error);});}
+export type {Device};
